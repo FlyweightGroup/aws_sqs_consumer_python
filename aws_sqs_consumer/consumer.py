@@ -118,7 +118,6 @@ class Consumer:
         """
         Start the consumer.
         """
-        # TODO: Figure out threading/daemon
         self._running = True
         while self._running:
             response = self._sqs_client.receive_message(
@@ -142,7 +141,6 @@ class Consumer:
         """
         Stop the consumer.
         """
-        # TODO: There's no way to invoke this other than a separate thread.
         self._running = False
 
     def start_consumer(self):
