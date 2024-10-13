@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aws_sqs_consumer"
-version = "0.0.15"
+version = "0.0.16"
 description = "AWS SQS Consumer"
 authors = ["Hexmos Technology <nobody@flyweightgroup.com>"]
 license = "MIT"

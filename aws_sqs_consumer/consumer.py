@@ -6,6 +6,9 @@ import os
 import boto3
 import time
 import traceback
+import threading
+import atexit
+from uuid import uuid4
 from typing import List
 
 from .error import SQSException
@@ -27,7 +30,10 @@ class Consumer:
         batch_size=1,
         wait_time_seconds=1,
         visibility_timeout_seconds=None,
-        polling_wait_time_ms=0
+        polling_wait_time_ms=0,
+        daemon: bool=True,
+        thread_name: str="consumer",
+        threaded: bool=True
     ):
         self.queue_url = queue_url
         self.attribute_names = attribute_names
@@ -41,6 +47,10 @@ class Consumer:
         self.wait_time_seconds = wait_time_seconds
         self.visibility_timeout_seconds = visibility_timeout_seconds
         self.polling_wait_time_ms = polling_wait_time_ms
+        self.daemon = daemon
+        self.thread_name_prefix = "aws_sqs_thread" + thread_name
+        self._sqs_thread = None
+        self.threaded = threaded
         if region:
             self._sqs_client = sqs_client or boto3.client(
                 "sqs", region_name=region)
@@ -52,6 +62,7 @@ class Consumer:
             raise Exception("Please specify the region parameter or set \
                             AWS_DEFAULT_REGION env variable.")
         self._running = False
+        atexit.register(self.stop)
 
     def handle_message(self, message: Message):
         """
@@ -134,6 +145,18 @@ class Consumer:
         # TODO: There's no way to invoke this other than a separate thread.
         self._running = False
 
+    def start_consumer(self):
+        """
+        Starts the process of receiving sqs messages either in main thread (if threaded=False) or
+        separate thread (if threaded=True) depending on threaded
+        """
+        if not self.threaded:
+            self.start()
+        else:
+            thread_name = self.thread_name_prefix + str(uuid4())
+            self._sqs_thread = threading.Thread(target=self.start, name=thread_name, daemon=self.daemon)
+            self._sqs_thread.start()
+
     def _process_message(self, message: Message):
         try:
             self.handle_message(message)
@@ -192,3 +215,5 @@ class Consumer:
 
     def _polling_wait(self):
         time.sleep(self.polling_wait_time_ms / 1000)
+
+
