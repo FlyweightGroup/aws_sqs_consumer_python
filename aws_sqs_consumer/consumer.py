@@ -31,9 +31,9 @@ class Consumer:
         wait_time_seconds=1,
         visibility_timeout_seconds=None,
         polling_wait_time_ms=0,
-        daemon: bool=True,
-        thread_name: str="consumer",
-        threaded: bool=True
+        daemon: bool = True,
+        thread_name: str = "consumer",
+        threaded: bool = True
     ):
         self.queue_url = queue_url
         self.attribute_names = attribute_names
@@ -147,14 +147,17 @@ class Consumer:
 
     def start_consumer(self):
         """
-        Starts the process of receiving sqs messages either in main thread (if threaded=False) or
-        separate thread (if threaded=True) depending on threaded
+        Starts the process of receiving sqs messages either in main
+        thread (if threaded=False) or separate thread (if threaded=True)
+        depending on threaded.
         """
         if not self.threaded:
             self.start()
         else:
             thread_name = self.thread_name_prefix + str(uuid4())
-            self._sqs_thread = threading.Thread(target=self.start, name=thread_name, daemon=self.daemon)
+            self._sqs_thread = threading.Thread(target=self.start,
+                                                name=thread_name,
+                                                daemon=self.daemon)
             self._sqs_thread.start()
 
     def _process_message(self, message: Message):
@@ -215,5 +218,3 @@ class Consumer:
 
     def _polling_wait(self):
         time.sleep(self.polling_wait_time_ms / 1000)
-
-
