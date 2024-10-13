@@ -142,6 +142,8 @@ class Consumer:
         Stop the consumer.
         """
         self._running = False
+        if not self.daemon:
+            self._sqs_thread.join()
 
     def start_consumer(self):
         """
